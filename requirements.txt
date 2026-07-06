@@ -10,6 +10,8 @@ openai>=1.40                # OpenAI vision (gpt-4o-mini) captioning for cloud
 
 # --- vector store (FAISS; falls back to LangChain InMemoryVectorStore) ---
 faiss-cpu>=1.9
+langchain-community>=0.4    # FAISS wrapper lives here (langchain_community.vectorstores.FAISS);
+                            # NOT pulled in by langchain 1.0, so it must be listed explicitly
 
 # --- core pipeline ---
 numpy>=1.26
