@@ -81,10 +81,11 @@ CHUNK_CHARS = int(_env("CHUNK_CHARS", "500"))
 # figure-rich body of typical papers (e.g. the attention-visualization figures
 # on pp.13-15 of "Attention Is All You Need") while bounding a 75-page outlier.
 MAX_PDF_PAGES = int(_env("MAX_PDF_PAGES", "16"))
-# Cloud (Render) sets this so the app LOADS a committed FAISS index instead of
-# re-embedding 250 passages at startup (which is flaky on a free-tier cold
-# start). Locally it stays off, so a re-ingest is always picked up by rebuild.
-USE_PREBUILT_INDEX = _env("USE_PREBUILT_INDEX", "0").lower() in ("1", "true", "yes")
+# A committed FAISS index is loaded automatically whenever one exists (so the
+# cloud never re-embeds 250 passages at a flaky free-tier startup). Set
+# FORCE_REBUILD=1 to rebuild from fresh passages instead (e.g. after a
+# re-ingest that added new pages).
+FORCE_REBUILD = _env("FORCE_REBUILD", "0").lower() in ("1", "true", "yes")
 
 
 def config_summary() -> dict:
@@ -132,7 +133,11 @@ def get_embeddings() -> Embeddings:
         try:
             from langchain_openai import OpenAIEmbeddings
 
-            return OpenAIEmbeddings(model=OPENAI_EMBED_MODEL, api_key=OPENAI_API_KEY)
+            # Generous timeout + retries: free-tier cloud cold starts have
+            # flaky egress, and the default 2 retries / short timeout give up.
+            return OpenAIEmbeddings(model=OPENAI_EMBED_MODEL,
+                                    api_key=OPENAI_API_KEY,
+                                    timeout=60.0, max_retries=6)
         except Exception as exc:  # noqa: BLE001
             warnings.warn(f"OpenAIEmbeddings init failed ({exc}); trying local.")
     if _ollama_up(OLLAMA_HOST):
@@ -626,8 +631,12 @@ def build_pipelines(embeddings: Embeddings | None = None, vlm: VLM | None = None
     mm = Pipeline("multimodal", True, embeddings, vlm)
     bl = Pipeline("text-only baseline", False, embeddings, vlm)
 
+    # Load a committed FAISS index whenever one exists for this embedder — no
+    # env var needed. This is what makes the cloud work: it skips embedding 250
+    # passages at startup (which fails on a free-tier cold start). Set
+    # FORCE_REBUILD=1 locally after a re-ingest to rebuild from fresh passages.
     mm_dir, bl_dir = _prebuilt_dirs(embeddings)
-    if (USE_PREBUILT_INDEX and VECTORSTORE == "faiss"
+    if (not FORCE_REBUILD and VECTORSTORE == "faiss"
             and mm_dir.exists() and bl_dir.exists()):
         try:
             return mm.load(mm_dir), bl.load(bl_dir)

@@ -15,11 +15,8 @@ services:
         sync: false
       - key: EMBED_BACKEND
         value: "openai"
-      # Load the committed FAISS index instead of re-embedding 250 passages at
-      # startup (which fails on the free-tier cold start). Only query embeddings
-      # hit OpenAI at runtime.
-      - key: USE_PREBUILT_INDEX
-        value: "1"
+      # NOTE: the app auto-loads the committed FAISS index (no startup
+      # embedding), so no extra flag is needed here.
       # KEEP IMAGE QUERIES ON QWEN-VL IN THE CLOUD: set a hosted Qwen-VL key
       # (OpenRouter or DashScope). If present, get_vlm() uses real Qwen2.5-VL;
       # only if it is absent does it fall back to OpenAI vision.
