@@ -474,8 +474,15 @@ def _passage_to_doc(p: dict) -> Document:
 
 
 def _faiss_available() -> bool:
+    # Using FAISS needs BOTH the faiss-cpu C library AND the LangChain wrapper
+    # in langchain_community (which langchain 1.0 does NOT install as a
+    # dependency). Require both here — otherwise VECTORSTORE would select the
+    # faiss path and then crash on the wrapper import at first use (which is
+    # exactly what broke the Render deploy). If either is missing we degrade
+    # cleanly to InMemoryVectorStore.
     try:
         import faiss  # noqa: F401
+        import langchain_community.vectorstores  # noqa: F401
 
         return True
     except Exception:  # noqa: BLE001
