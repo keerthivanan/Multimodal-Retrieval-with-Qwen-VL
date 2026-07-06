@@ -5,7 +5,8 @@
 langchain>=1.0
 langchain-core>=1.0
 langchain-openai>=0.3       # OpenAIEmbeddings (text-embedding-3-small)
-langchain-ollama>=0.3       # ChatOllama -> Qwen2.5-VL (multimodal)
+langchain-ollama>=0.3       # ChatOllama -> Qwen2.5-VL (multimodal, local)
+openai>=1.40                # OpenAI vision (gpt-4o-mini) captioning for cloud
 
 # --- vector store (FAISS; falls back to LangChain InMemoryVectorStore) ---
 faiss-cpu>=1.9

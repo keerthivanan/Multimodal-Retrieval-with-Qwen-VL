@@ -70,6 +70,23 @@ stopped Ollama → automatic mock fallback with a visible warning.
 
 ---
 
+## 2b. Deploy to the cloud (Render — free, one service)
+
+The app runs on a GPU-less host because the index (`data/index`) and page
+thumbnails (`data/pages`) are committed, and both embeddings **and** image
+captioning fall back to OpenAI in the cloud (no Ollama needed):
+
+1. Push this repo to GitHub.
+2. On [render.com](https://render.com) → **New → Blueprint** → pick this repo
+   (it reads `render.yaml`).
+3. Set the **`OPENAI_API_KEY`** environment variable in the Render dashboard
+   (never committed).
+4. Deploy → you get a public URL. Text search works instantly; image-upload
+   queries use OpenAI vision (`gpt-4o-mini`, ~5 s).
+
+Locally, Ollama is used automatically instead (free); the cloud fallback only
+kicks in when Ollama isn't reachable.
+
 ## 3. Architecture
 
 ```

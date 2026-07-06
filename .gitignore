@@ -4,9 +4,9 @@
 !.env.example
 .streamlit/secrets.toml
 
-# --- generated artifacts (rebuilt by scripts) ---
-data/pages/
-data/index/
+# --- generated artifacts ---
+# NOTE: data/index (captions) + data/pages (thumbnails) ARE committed so the
+# app runs on a GPU-less host (Render) without re-ingesting via Ollama.
 data/uploads/
 data/test_*
 reports/*.tmp

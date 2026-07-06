@@ -1,0 +1,19 @@
+# Render deployment (https://render.com) — one web service runs the whole app.
+# The committed data/index + data/pages let it start WITHOUT Ollama; embeddings
+# and image captioning both use OpenAI in the cloud (set OPENAI_API_KEY below).
+services:
+  - type: web
+    name: multimodal-rag-qwen-vl
+    runtime: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "streamlit run app.py --server.port $PORT --server.address 0.0.0.0 --server.headless true --server.enableCORS false"
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+      - key: OPENAI_API_KEY   # set the value in the Render dashboard (never commit it)
+        sync: false
+      - key: EMBED_BACKEND
+        value: "openai"
+      # VLM_BACKEND defaults to ollama, which is absent in the cloud, so the app
+      # auto-falls back to OpenAI vision for image captioning.

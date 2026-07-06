@@ -109,9 +109,22 @@ def _load():
     return build_pipelines()
 
 
+def _resolve(image_path: str) -> Path | None:
+    """Find an image whether the stored path is absolute (local) or must be
+    looked up by filename in the committed folders (portable for cloud/Render)."""
+    p = Path(image_path)
+    if p.exists():
+        return p
+    for base in (rag.PAGES_DIR, rag.CORPUS_DIR):
+        cand = base / p.name
+        if cand.exists():
+            return cand
+    return None
+
+
 def _img_uri(path: str) -> str | None:
-    p = Path(path)
-    if not p.exists():
+    p = _resolve(path)
+    if p is None:
         return None
     mime = "png" if p.suffix.lower() == ".png" else "jpeg"
     return f"data:image/{mime};base64,{base64.b64encode(p.read_bytes()).decode()}"

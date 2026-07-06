@@ -225,6 +225,58 @@ class ChatOllamaVLM(VLM):
             return 0.5
 
 
+class OpenAIVLM(VLM):
+    """Cloud vision via OpenAI (gpt-4o-mini). Used when no local Ollama is
+    available (e.g. on Render) but an OpenAI key is present — so image queries
+    still work in the cloud on the same key as the embeddings."""
+
+    name = "openai"
+
+    def __init__(self, api_key: str, model: str = "gpt-4o-mini"):
+        from openai import OpenAI
+
+        self._client = OpenAI(api_key=api_key)
+        self.model = model
+
+    @staticmethod
+    def _data_uri(image_path: str | Path) -> str:
+        import io
+
+        from PIL import Image
+
+        img = Image.open(image_path).convert("RGB")
+        img.thumbnail((1024, 1024))
+        buf = io.BytesIO()
+        img.save(buf, format="PNG")
+        return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode()
+
+    def _ask(self, prompt: str, image_path: str | Path) -> str:
+        resp = self._client.chat.completions.create(
+            model=self.model, temperature=0.1,
+            messages=[{"role": "user", "content": [
+                {"type": "text", "text": prompt},
+                {"type": "image_url",
+                 "image_url": {"url": self._data_uri(image_path)}}]}])
+        return (resp.choices[0].message.content or "").strip()
+
+    def caption(self, image_path: str | Path, hint: str = "") -> str:
+        try:
+            return self._ask(CAPTION_PROMPT, image_path) or (hint or Path(image_path).stem)
+        except Exception as exc:  # noqa: BLE001
+            warnings.warn(f"OpenAI caption failed ({exc}) -> hint.")
+            return hint or f"Image: {Path(image_path).stem}"
+
+    def rerank(self, query: str, text: str, image_path: str | Path) -> float:
+        prompt = (f"Query: {query!r}\nRate how relevant THIS document image is to "
+                  "the query on a scale of 0 to 10. Reply with ONLY the number.")
+        try:
+            raw = self._ask(prompt, image_path)
+            num = "".join(c for c in raw if c.isdigit() or c == ".")
+            return max(0.0, min(1.0, float(num) / 10.0)) if num else 0.5
+        except Exception:  # noqa: BLE001
+            return 0.5
+
+
 def _ollama_up(host: str) -> bool:
     try:
         import requests
@@ -236,14 +288,20 @@ def _ollama_up(host: str) -> bool:
 
 
 def get_vlm() -> VLM:
-    if VLM_BACKEND == "ollama":
-        if not _ollama_up(OLLAMA_HOST):
-            warnings.warn(f"Ollama not reachable at {OLLAMA_HOST} -> mock VLM.")
-            return MockVLM()
+    """Vision backend: local Ollama if reachable -> OpenAI vision if a key is
+    present (cloud) -> mock. So it captions images locally for free, and still
+    works when deployed to a GPU-less host like Render."""
+    if VLM_BACKEND == "ollama" and _ollama_up(OLLAMA_HOST):
         try:
             return ChatOllamaVLM(OLLAMA_MODEL, OLLAMA_HOST)
         except Exception as exc:  # noqa: BLE001
-            warnings.warn(f"ChatOllama init failed ({exc}) -> mock.")
+            warnings.warn(f"ChatOllama init failed ({exc}); trying OpenAI vision.")
+    if OPENAI_API_KEY:
+        try:
+            return OpenAIVLM(OPENAI_API_KEY)
+        except Exception as exc:  # noqa: BLE001
+            warnings.warn(f"OpenAI vision init failed ({exc}) -> mock.")
+    warnings.warn("No local Ollama and no OpenAI key -> mock VLM (hint captions).")
     return MockVLM()
 
 
