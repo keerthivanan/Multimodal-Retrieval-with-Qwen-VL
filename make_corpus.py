@@ -49,7 +49,7 @@ EXPENSES = {"Engineering": 45, "Sales": 25, "Marketing": 20, "Operations": 10}  
 HEADCOUNT = {"2021": 40, "2022": 65, "2023": 110, "2024": 180, "2025": 260}
 
 
-def _load_font(size: int) -> ImageFont.FreeTypeFont:
+def _load_font(size: int) -> "ImageFont.FreeTypeFont | ImageFont.ImageFont":
     """Best-effort truetype font; falls back to PIL default if unavailable."""
     for name in ("arial.ttf", "DejaVuSans.ttf", "segoeui.ttf"):
         try:

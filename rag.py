@@ -623,9 +623,10 @@ def _prebuilt_dirs(embeddings) -> tuple[Path, Path]:
 
 def build_pipelines(embeddings: Embeddings | None = None, vlm: VLM | None = None
                     ) -> tuple[Pipeline, Pipeline]:
-    """Return (multimodal, baseline). On the cloud (USE_PREBUILT_INDEX) load a
-    committed FAISS index so startup makes ZERO embedding calls; otherwise
-    (re)build from passages so a fresh ingest is always reflected."""
+    """Return (multimodal, baseline). If a committed FAISS index exists it is
+    loaded (startup makes ZERO embedding calls — this is what lets the cloud
+    boot); otherwise it (re)builds from passages. FORCE_REBUILD=1 forces a
+    rebuild (e.g. after a re-ingest that added new pages)."""
     embeddings = embeddings or get_embeddings()
     vlm = vlm or get_vlm()
     mm = Pipeline("multimodal", True, embeddings, vlm)
