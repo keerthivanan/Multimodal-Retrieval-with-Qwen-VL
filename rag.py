@@ -70,6 +70,11 @@ OPENAI_EMBED_MODEL = _env("OPENAI_EMBED_MODEL", "text-embedding-3-small")
 OLLAMA_HOST = _env("OLLAMA_HOST", "http://localhost:11434")
 OLLAMA_MODEL = _env("OLLAMA_MODEL", "qwen2.5vl:3b")
 OLLAMA_EMBED_MODEL = _env("OLLAMA_EMBED_MODEL", "mxbai-embed-large")
+# Hosted Qwen-VL API (OpenAI-compatible) so image queries stay on Qwen-VL even
+# in the cloud where Ollama can't run. Default endpoint: OpenRouter.
+QWEN_VL_API_KEY = _env("QWEN_VL_API_KEY", "")
+QWEN_VL_BASE_URL = _env("QWEN_VL_BASE_URL", "https://openrouter.ai/api/v1")
+QWEN_VL_MODEL = _env("QWEN_VL_MODEL", "qwen/qwen-2.5-vl-7b-instruct")
 TOP_K = int(_env("TOP_K", "5"))
 CHUNK_CHARS = int(_env("CHUNK_CHARS", "500"))
 # Cap pages ingested per PDF: VLM captioning costs ~15 s/page. 16 covers the
@@ -225,18 +230,19 @@ class ChatOllamaVLM(VLM):
             return 0.5
 
 
-class OpenAIVLM(VLM):
-    """Cloud vision via OpenAI (gpt-4o-mini). Used when no local Ollama is
-    available (e.g. on Render) but an OpenAI key is present — so image queries
-    still work in the cloud on the same key as the embeddings."""
+class OpenAICompatVLM(VLM):
+    """Vision over ANY OpenAI-compatible chat API. Used for a HOSTED Qwen-VL
+    endpoint (OpenRouter/DashScope serve real Qwen2.5-VL) so image queries stay
+    on Qwen-VL in the cloud; also usable with OpenAI as a last-resort fallback."""
 
-    name = "openai"
-
-    def __init__(self, api_key: str, model: str = "gpt-4o-mini"):
+    def __init__(self, name: str, api_key: str, model: str,
+                 base_url: str | None = None):
         from openai import OpenAI
 
-        self._client = OpenAI(api_key=api_key)
+        self.name = name
         self.model = model
+        self._client = (OpenAI(api_key=api_key, base_url=base_url) if base_url
+                        else OpenAI(api_key=api_key))
 
     @staticmethod
     def _data_uri(image_path: str | Path) -> str:
@@ -263,7 +269,7 @@ class OpenAIVLM(VLM):
         try:
             return self._ask(CAPTION_PROMPT, image_path) or (hint or Path(image_path).stem)
         except Exception as exc:  # noqa: BLE001
-            warnings.warn(f"OpenAI caption failed ({exc}) -> hint.")
+            warnings.warn(f"{self.name} caption failed ({exc}) -> hint.")
             return hint or f"Image: {Path(image_path).stem}"
 
     def rerank(self, query: str, text: str, image_path: str | Path) -> float:
@@ -288,20 +294,33 @@ def _ollama_up(host: str) -> bool:
 
 
 def get_vlm() -> VLM:
-    """Vision backend: local Ollama if reachable -> OpenAI vision if a key is
-    present (cloud) -> mock. So it captions images locally for free, and still
-    works when deployed to a GPU-less host like Render."""
+    """Vision backend, Qwen-VL FIRST at every tier:
+      1. Qwen2.5-VL local via Ollama   (primary; free; used whenever reachable)
+      2. Qwen2.5-VL hosted API          (cloud; keeps image queries on Qwen-VL)
+      3. OpenAI vision                  (last-resort fallback only)
+      4. mock                           (offline)
+    So image captioning is Qwen-VL locally AND in the cloud (given a hosted key).
+    """
+    # 1) local Qwen-VL
     if VLM_BACKEND == "ollama" and _ollama_up(OLLAMA_HOST):
         try:
             return ChatOllamaVLM(OLLAMA_MODEL, OLLAMA_HOST)
         except Exception as exc:  # noqa: BLE001
-            warnings.warn(f"ChatOllama init failed ({exc}); trying OpenAI vision.")
+            warnings.warn(f"ChatOllama init failed ({exc}); trying hosted Qwen-VL.")
+    # 2) hosted Qwen-VL (real Qwen2.5-VL via OpenRouter/DashScope)
+    if QWEN_VL_API_KEY:
+        try:
+            return OpenAICompatVLM("qwen-vl-api", QWEN_VL_API_KEY, QWEN_VL_MODEL,
+                                   base_url=QWEN_VL_BASE_URL)
+        except Exception as exc:  # noqa: BLE001
+            warnings.warn(f"Hosted Qwen-VL init failed ({exc}); trying OpenAI.")
+    # 3) OpenAI vision (only if no Qwen-VL is available anywhere)
     if OPENAI_API_KEY:
         try:
-            return OpenAIVLM(OPENAI_API_KEY)
+            return OpenAICompatVLM("openai", OPENAI_API_KEY, "gpt-4o-mini")
         except Exception as exc:  # noqa: BLE001
             warnings.warn(f"OpenAI vision init failed ({exc}) -> mock.")
-    warnings.warn("No local Ollama and no OpenAI key -> mock VLM (hint captions).")
+    warnings.warn("No Qwen-VL (local or hosted) and no OpenAI key -> mock VLM.")
     return MockVLM()
 
 

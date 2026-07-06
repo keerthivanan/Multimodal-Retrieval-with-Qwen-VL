@@ -11,9 +11,17 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: "3.11.9"
-      - key: OPENAI_API_KEY   # set the value in the Render dashboard (never commit it)
+      - key: OPENAI_API_KEY   # set in the Render dashboard (never commit it)
         sync: false
       - key: EMBED_BACKEND
         value: "openai"
-      # VLM_BACKEND defaults to ollama, which is absent in the cloud, so the app
-      # auto-falls back to OpenAI vision for image captioning.
+      # KEEP IMAGE QUERIES ON QWEN-VL IN THE CLOUD: set a hosted Qwen-VL key
+      # (OpenRouter or DashScope). If present, get_vlm() uses real Qwen2.5-VL;
+      # only if it is absent does it fall back to OpenAI vision.
+      - key: QWEN_VL_API_KEY  # set in the Render dashboard (OpenRouter/DashScope)
+        sync: false
+      # Defaults target OpenRouter's Qwen2.5-VL; override for DashScope if needed.
+      - key: QWEN_VL_BASE_URL
+        value: "https://openrouter.ai/api/v1"
+      - key: QWEN_VL_MODEL
+        value: "qwen/qwen-2.5-vl-7b-instruct"
