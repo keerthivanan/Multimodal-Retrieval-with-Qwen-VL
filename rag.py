@@ -81,6 +81,10 @@ CHUNK_CHARS = int(_env("CHUNK_CHARS", "500"))
 # figure-rich body of typical papers (e.g. the attention-visualization figures
 # on pp.13-15 of "Attention Is All You Need") while bounding a 75-page outlier.
 MAX_PDF_PAGES = int(_env("MAX_PDF_PAGES", "16"))
+# Cloud (Render) sets this so the app LOADS a committed FAISS index instead of
+# re-embedding 250 passages at startup (which is flaky on a free-tier cold
+# start). Locally it stays off, so a re-ingest is always picked up by rebuild.
+USE_PREBUILT_INDEX = _env("USE_PREBUILT_INDEX", "0").lower() in ("1", "true", "yes")
 
 
 def config_summary() -> dict:
@@ -545,6 +549,20 @@ class Pipeline:
         self._add_docs(docs)
         return len(docs)
 
+    def save(self, folder: Path) -> None:
+        """Persist a FAISS index to disk (so the cloud can load, not rebuild)."""
+        if VECTORSTORE == "faiss" and self._store is not None:
+            folder.mkdir(parents=True, exist_ok=True)
+            self._store.save_local(str(folder))
+
+    def load(self, folder: Path) -> "Pipeline":
+        """Load a committed FAISS index — no embedding calls at startup."""
+        from langchain_community.vectorstores import FAISS
+
+        self._store = FAISS.load_local(str(folder), self.embeddings,
+                                       allow_dangerous_deserialization=True)
+        return self
+
     def _hits(self, query: str, k: int) -> list[SearchHit]:
         pairs = self._store.similarity_search_with_score(query, k=max(k * 3, k))
         hits = []
@@ -593,16 +611,48 @@ class Pipeline:
                             query_caption=caption, doc_ranking=ranking)
 
 
+def _prebuilt_dirs(embeddings) -> tuple[Path, Path]:
+    tag = type(embeddings).__name__  # index is embedder-specific
+    return (INDEX_DIR / f"faiss_{tag}_mm", INDEX_DIR / f"faiss_{tag}_bl")
+
+
 def build_pipelines(embeddings: Embeddings | None = None, vlm: VLM | None = None
                     ) -> tuple[Pipeline, Pipeline]:
-    """Return (multimodal, baseline) sharing the same embeddings + VLM."""
+    """Return (multimodal, baseline). On the cloud (USE_PREBUILT_INDEX) load a
+    committed FAISS index so startup makes ZERO embedding calls; otherwise
+    (re)build from passages so a fresh ingest is always reflected."""
     embeddings = embeddings or get_embeddings()
     vlm = vlm or get_vlm()
+    mm = Pipeline("multimodal", True, embeddings, vlm)
+    bl = Pipeline("text-only baseline", False, embeddings, vlm)
+
+    mm_dir, bl_dir = _prebuilt_dirs(embeddings)
+    if (USE_PREBUILT_INDEX and VECTORSTORE == "faiss"
+            and mm_dir.exists() and bl_dir.exists()):
+        try:
+            return mm.load(mm_dir), bl.load(bl_dir)
+        except Exception as exc:  # noqa: BLE001
+            warnings.warn(f"Prebuilt index load failed ({exc}); rebuilding.")
+
     passages = load_passages()
-    multimodal = Pipeline("multimodal", True, embeddings, vlm).build(passages)
-    baseline = Pipeline("text-only baseline", False, embeddings, vlm).build(passages)
-    return multimodal, baseline
+    return mm.build(passages), bl.build(passages)
+
+
+def save_prebuilt_index() -> None:
+    """Build the FAISS index from the current passages + embedder and save it,
+    so it can be committed and loaded on a GPU-less / flaky-network host."""
+    embeddings = get_embeddings()
+    passages = load_passages()
+    mm_dir, bl_dir = _prebuilt_dirs(embeddings)
+    Pipeline("multimodal", True, embeddings, get_vlm()).build(passages).save(mm_dir)
+    Pipeline("text-only baseline", False, embeddings, get_vlm()).build(passages).save(bl_dir)
+    print(f"[prebuilt] saved index for {type(embeddings).__name__} -> {mm_dir}, {bl_dir}")
 
 
 if __name__ == "__main__":
-    build_index()
+    import sys
+
+    if len(sys.argv) > 1 and sys.argv[1] == "save-index":
+        save_prebuilt_index()
+    else:
+        build_index()
