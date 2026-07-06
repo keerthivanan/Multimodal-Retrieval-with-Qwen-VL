@@ -1,0 +1,25 @@
+# Task 1 — Multimodal Retrieval (Qwen-VL + Streamlit)
+# Python 3.10+ (tested on 3.13). All CPU-friendly; no GPU required for mock mode.
+
+# --- LangChain (RAG orchestration: Documents, Embeddings, VectorStore, VLM) ---
+langchain>=1.0
+langchain-core>=1.0
+langchain-openai>=0.3       # OpenAIEmbeddings (text-embedding-3-small)
+langchain-ollama>=0.3       # ChatOllama -> Qwen2.5-VL (multimodal)
+
+# --- vector store (FAISS; falls back to LangChain InMemoryVectorStore) ---
+faiss-cpu>=1.9
+
+# --- core pipeline ---
+numpy>=1.26
+pillow>=10.0
+scikit-learn>=1.4           # mock embeddings (HashingVectorizer)
+pymupdf>=1.24               # PDF text extraction + page rendering
+requests>=2.31             # Ollama availability probe
+
+# --- UI ---
+streamlit>=1.36
+
+# --- corpus generation (only needed to (re)create the synthetic corpus) ---
+matplotlib>=3.8
+reportlab>=4.0

@@ -1,0 +1,14 @@
+# Professional theme — coherent indigo/slate palette (fixes the default red).
+[theme]
+base = "dark"
+primaryColor = "#6366f1"
+backgroundColor = "#0b1220"
+secondaryBackgroundColor = "#151f33"
+textColor = "#e6ebf5"
+font = "sans serif"
+
+[server]
+headless = true
+
+[browser]
+gatherUsageStats = false

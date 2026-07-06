@@ -1,0 +1,217 @@
+[
+  {
+    "doc_id": "security_policy",
+    "file": "security_policy.pdf",
+    "type": "pdf",
+    "title": "Information Security Policy",
+    "modality": "text",
+    "visual_only": false,
+    "description": "Password rules, MFA requirements, device reporting."
+  },
+  {
+    "doc_id": "onboarding_guide",
+    "file": "onboarding_guide.pdf",
+    "type": "pdf",
+    "title": "New Employee Onboarding Guide",
+    "modality": "text",
+    "visual_only": false,
+    "description": "First-day steps, IT setup, compliance training."
+  },
+  {
+    "doc_id": "remote_work_policy",
+    "file": "remote_work_policy.pdf",
+    "type": "pdf",
+    "title": "Remote Work Policy",
+    "modality": "text",
+    "visual_only": false,
+    "description": "Remote days, core hours, stipend, VPN requirement."
+  },
+  {
+    "doc_id": "revenue_report",
+    "file": "revenue_report.pdf",
+    "type": "pdf",
+    "title": "FY2025 Revenue Report",
+    "modality": "mixed",
+    "visual_only": false,
+    "description": "Quarterly revenue bar chart; Q3 is the peak quarter at $210M.",
+    "chart_fact": "Q3 has the highest revenue (only visible in the bar chart)."
+  },
+  {
+    "doc_id": "expense_breakdown",
+    "file": "expense_breakdown.pdf",
+    "type": "pdf",
+    "title": "Departmental Expense Breakdown",
+    "modality": "mixed",
+    "visual_only": false,
+    "description": "Expense share pie chart; Engineering is the largest at 45%.",
+    "chart_fact": "Engineering is the largest expense category (only in the pie chart)."
+  },
+  {
+    "doc_id": "headcount_trend",
+    "file": "headcount_trend.pdf",
+    "type": "pdf",
+    "title": "Headcount Growth 2021-2025",
+    "modality": "mixed",
+    "visual_only": false,
+    "description": "Line chart of headcount growth from 40 (2021) to 260 (2025)."
+  },
+  {
+    "doc_id": "salary_table",
+    "file": "salary_table.png",
+    "type": "image",
+    "modality": "image",
+    "title": "Compensation Table (scanned)",
+    "visual_only": true,
+    "description": "Scanned salary table: ML Research Lead $205k is highest; AI/ML Engineer L3 $135k.",
+    "chart_fact": "Salary figures per role exist only as pixels in a scanned table."
+  },
+  {
+    "doc_id": "org_chart",
+    "file": "org_chart.png",
+    "type": "image",
+    "modality": "image",
+    "title": "Company Org Chart",
+    "visual_only": true,
+    "description": "Org hierarchy: CEO over CTO and CFO; AI Lead and Backend Lead report to the CTO.",
+    "chart_fact": "Reporting lines exist only in the diagram."
+  },
+  {
+    "doc_id": "network_architecture",
+    "file": "network_architecture.png",
+    "type": "image",
+    "modality": "image",
+    "title": "Internal Network Architecture",
+    "visual_only": true,
+    "description": "Data-flow diagram: Client -> Load Balancer -> App Server -> Database; Cache connects to App Server.",
+    "chart_fact": "The App Server is the component directly connected to the Database (only in the diagram)."
+  },
+  {
+    "doc_id": "server_dashboard",
+    "file": "server_dashboard.png",
+    "type": "image",
+    "modality": "image",
+    "title": "Cluster Health Dashboard",
+    "visual_only": true,
+    "description": "Ops dashboard; api-07 is overloaded at CPU 92% (red), others healthy.",
+    "chart_fact": "api-07 at 92% CPU is the overloaded server (only in the dashboard)."
+  },
+  {
+    "doc_id": "error_screenshot",
+    "file": "error_screenshot.png",
+    "type": "image",
+    "modality": "image",
+    "title": "Application Error Dialog",
+    "visual_only": true,
+    "description": "Error screenshot: database connection timeout on host db-03, ETIMEDOUT 5401.",
+    "chart_fact": "Error text is embedded in the screenshot image, not selectable text."
+  },
+  {
+    "doc_id": "product_roadmap",
+    "file": "product_roadmap.png",
+    "type": "image",
+    "modality": "image",
+    "title": "Product Roadmap 2025",
+    "visual_only": true,
+    "description": "Roadmap timeline: Q1 Search v2, Q2 Mobile App, Q3 AI Assistant, Q4 Analytics Suite."
+  },
+  {
+    "doc_id": "arxiv_attention",
+    "file": "arxiv_attention.pdf",
+    "type": "pdf",
+    "modality": "mixed",
+    "title": "Attention Is All You Need (Transformer paper)",
+    "visual_only": false,
+    "description": "Attention Is All You Need (Transformer paper)",
+    "source": "https://arxiv.org/pdf/1706.03762"
+  },
+  {
+    "doc_id": "arxiv_resnet",
+    "file": "arxiv_resnet.pdf",
+    "type": "pdf",
+    "modality": "mixed",
+    "title": "Deep Residual Learning for Image Recognition (ResNet)",
+    "visual_only": false,
+    "description": "Deep Residual Learning for Image Recognition (ResNet)",
+    "source": "https://arxiv.org/pdf/1512.03385"
+  },
+  {
+    "doc_id": "arxiv_bert",
+    "file": "arxiv_bert.pdf",
+    "type": "pdf",
+    "modality": "mixed",
+    "title": "BERT: Pre-training of Deep Bidirectional Transformers",
+    "visual_only": false,
+    "description": "BERT: Pre-training of Deep Bidirectional Transformers",
+    "source": "https://arxiv.org/pdf/1810.04805"
+  },
+  {
+    "doc_id": "arxiv_vit",
+    "file": "arxiv_vit.pdf",
+    "type": "pdf",
+    "modality": "mixed",
+    "title": "An Image is Worth 16x16 Words (Vision Transformer)",
+    "visual_only": false,
+    "description": "An Image is Worth 16x16 Words (Vision Transformer)",
+    "source": "https://arxiv.org/pdf/2010.11929"
+  },
+  {
+    "doc_id": "arxiv_gpt3",
+    "file": "arxiv_gpt3.pdf",
+    "type": "pdf",
+    "modality": "mixed",
+    "title": "Language Models are Few-Shot Learners (GPT-3)",
+    "visual_only": false,
+    "description": "Language Models are Few-Shot Learners (GPT-3)",
+    "source": "https://arxiv.org/pdf/2005.14165"
+  },
+  {
+    "doc_id": "arxiv_word2vec",
+    "file": "arxiv_word2vec.pdf",
+    "type": "pdf",
+    "modality": "mixed",
+    "title": "Efficient Estimation of Word Representations (word2vec)",
+    "visual_only": false,
+    "description": "Efficient Estimation of Word Representations (word2vec)",
+    "source": "https://arxiv.org/pdf/1301.3781"
+  },
+  {
+    "doc_id": "wiki_internet_map",
+    "file": "wiki_internet_map.png",
+    "type": "image",
+    "modality": "image",
+    "title": "Partial map of the Internet (network topology)",
+    "visual_only": true,
+    "description": "Partial map of the Internet (network topology)",
+    "source": "https://commons.wikimedia.org/wiki/Special:FilePath/Internet_map_1024.jpg"
+  },
+  {
+    "doc_id": "wiki_sunspots",
+    "file": "wiki_sunspots.png",
+    "type": "image",
+    "modality": "image",
+    "title": "400 years of sunspot number observations chart",
+    "visual_only": true,
+    "description": "400 years of sunspot number observations chart",
+    "source": "https://commons.wikimedia.org/wiki/Special:FilePath/Sunspot_Numbers.png"
+  },
+  {
+    "doc_id": "wiki_dna",
+    "file": "wiki_dna.png",
+    "type": "image",
+    "modality": "image",
+    "title": "Labelled diagram of DNA structure",
+    "visual_only": true,
+    "description": "Labelled diagram of DNA structure",
+    "source": "https://commons.wikimedia.org/wiki/Special:FilePath/DNA_Structure%2BKey%2BLabelled.pn_NoBB.png"
+  },
+  {
+    "doc_id": "wiki_moores_law",
+    "file": "wiki_moores_law.png",
+    "type": "image",
+    "modality": "image",
+    "title": "Moore's Law transistor count chart 1970-2020",
+    "visual_only": true,
+    "description": "Moore's Law transistor count chart 1970-2020",
+    "source": "https://commons.wikimedia.org/wiki/Special:FilePath/Moore%27s_Law_Transistor_Count_1970-2020.png"
+  }
+]

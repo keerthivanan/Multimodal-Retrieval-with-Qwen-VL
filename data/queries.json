@@ -1,0 +1,146 @@
+[
+  {
+    "id": "q01",
+    "query": "What is the company password policy?",
+    "type": "text",
+    "relevant_doc_ids": ["security_policy"],
+    "image_answer": false,
+    "note": "Pure text; baseline should tie or win."
+  },
+  {
+    "id": "q02",
+    "query": "How do I get set up as a new employee on my first day?",
+    "type": "text",
+    "relevant_doc_ids": ["onboarding_guide"],
+    "image_answer": false,
+    "note": "Pure text."
+  },
+  {
+    "id": "q03",
+    "query": "How many days per week can I work remotely and what are core hours?",
+    "type": "text",
+    "relevant_doc_ids": ["remote_work_policy"],
+    "image_answer": false,
+    "note": "Pure text."
+  },
+  {
+    "id": "q04",
+    "query": "Show me the quarterly revenue report.",
+    "type": "text",
+    "relevant_doc_ids": ["revenue_report"],
+    "image_answer": false,
+    "note": "Mixed doc; title/prose give text a handle. Expect a tie."
+  },
+  {
+    "id": "q05",
+    "query": "Which quarter had the highest revenue?",
+    "type": "text",
+    "relevant_doc_ids": ["revenue_report"],
+    "image_answer": true,
+    "note": "Answer (Q3 peak) lives only in the bar chart."
+  },
+  {
+    "id": "q06",
+    "query": "What is the largest departmental expense category?",
+    "type": "text",
+    "relevant_doc_ids": ["expense_breakdown"],
+    "image_answer": true,
+    "note": "Answer (Engineering 45%) lives only in the pie chart."
+  },
+  {
+    "id": "q07",
+    "query": "Which component connects directly to the database?",
+    "type": "text",
+    "relevant_doc_ids": ["network_architecture"],
+    "image_answer": true,
+    "note": "Standalone diagram PNG; baseline is blind (no extractable text)."
+  },
+  {
+    "id": "q08",
+    "query": "Show the employee salary / compensation table.",
+    "type": "text",
+    "relevant_doc_ids": ["salary_table"],
+    "image_answer": true,
+    "note": "Scanned table image; baseline is blind."
+  },
+  {
+    "id": "q09",
+    "query": "Who reports to the CTO in the org chart?",
+    "type": "text",
+    "relevant_doc_ids": ["org_chart"],
+    "image_answer": true,
+    "note": "Org hierarchy image; baseline is blind."
+  },
+  {
+    "id": "q10",
+    "query": "Which server is overloaded with high CPU usage?",
+    "type": "text",
+    "relevant_doc_ids": ["server_dashboard"],
+    "image_answer": true,
+    "note": "Dashboard image (api-07 at 92%); baseline is blind."
+  },
+  {
+    "id": "q11",
+    "query": "What database error caused the outage?",
+    "type": "text",
+    "relevant_doc_ids": ["error_screenshot"],
+    "image_answer": true,
+    "note": "Error text is baked into a screenshot image; baseline is blind."
+  },
+  {
+    "id": "q12",
+    "query": "How has headcount grown over the last five years?",
+    "type": "text",
+    "relevant_doc_ids": ["headcount_trend"],
+    "image_answer": false,
+    "note": "Mixed doc with supporting prose; expect a tie."
+  },
+  {
+    "id": "q13",
+    "query": "Find the paper that introduced the Transformer attention architecture.",
+    "type": "text",
+    "relevant_doc_ids": ["arxiv_attention"],
+    "image_answer": false,
+    "note": "Real arXiv PDF; title/abstract text present. Expect a tie."
+  },
+  {
+    "id": "q14",
+    "query": "Which paper is about deep residual learning for image recognition?",
+    "type": "text",
+    "relevant_doc_ids": ["arxiv_resnet"],
+    "image_answer": false,
+    "note": "Real arXiv PDF (ResNet)."
+  },
+  {
+    "id": "q15",
+    "query": "Show me the visualization of internet network topology.",
+    "type": "text",
+    "relevant_doc_ids": ["wiki_internet_map"],
+    "image_answer": true,
+    "note": "Real Wikimedia image; no extractable text. Baseline blind."
+  },
+  {
+    "id": "q16",
+    "query": "Which chart shows transistor counts doubling over time (Moore's law)?",
+    "type": "text",
+    "relevant_doc_ids": ["wiki_moores_law"],
+    "image_answer": true,
+    "note": "Real Wikimedia chart image. Baseline blind."
+  },
+  {
+    "id": "q17",
+    "query": "Find the labelled diagram of DNA structure.",
+    "type": "text",
+    "relevant_doc_ids": ["wiki_dna"],
+    "image_answer": true,
+    "note": "Real Wikimedia diagram. Baseline blind."
+  },
+  {
+    "id": "q18",
+    "query": "Which document shows historical sunspot number observations?",
+    "type": "text",
+    "relevant_doc_ids": ["wiki_sunspots"],
+    "image_answer": true,
+    "note": "Real Wikimedia chart. Baseline blind."
+  }
+]

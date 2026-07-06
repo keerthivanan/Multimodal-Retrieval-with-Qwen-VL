@@ -1,0 +1,22 @@
+# --- SECRETS: never commit these ---
+.env
+.env.*
+!.env.example
+.streamlit/secrets.toml
+
+# --- generated artifacts (rebuilt by scripts) ---
+data/pages/
+data/index/
+data/uploads/
+data/test_*
+reports/*.tmp
+
+# --- python / env ---
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# --- os / editor ---
+.DS_Store
+Thumbs.db
