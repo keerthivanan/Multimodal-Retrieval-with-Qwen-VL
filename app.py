@@ -83,6 +83,16 @@ st.markdown("""
 .empty { background:var(--card); border:1px dashed var(--line); border-radius:12px;
   padding:18px; text-align:center; color:var(--muted); }
 
+/* the prominent Answer box at the top of results */
+.answer { background:linear-gradient(135deg, rgba(16,185,129,.14), rgba(99,102,241,.10));
+  border:1px solid var(--ok); border-radius:14px; padding:16px 18px; margin:6px 0 14px;
+  box-shadow:0 6px 18px rgba(16,185,129,.12); }
+.answer-h { font-size:.8rem; font-weight:800; letter-spacing:.04em; color:var(--ok);
+  text-transform:uppercase; margin-bottom:4px; }
+.answer-b { font-size:1.12rem; line-height:1.5; color:var(--ink); font-weight:600; }
+.answer-src { margin-top:8px; font-size:.8rem; color:var(--muted); }
+.sources-label { font-size:.85rem; font-weight:700; color:var(--muted); margin:.4rem 0; }
+
 /* controls */
 .stButton > button {
   border-radius:11px; font-weight:700; padding:.55rem 1rem; border:1px solid var(--line);
@@ -238,9 +248,23 @@ with c2:
                   help="How many ranked matches to show. #1 is the answer; "
                        "the rest are runners-up.")
 with c3:
-    rerank = st.toggle("Qwen-VL rerank", value=False,
-                       help="Show Qwen-VL each candidate image and blend its "
-                            "relevance judgement with the embedding score.")
+    model_choice = st.radio("Model", ["Qwen-VL", "OpenAI vision"],
+                            help="The vision model used to read image queries and "
+                                 "to rerank. Qwen-VL = local & free (mandated); "
+                                 "OpenAI vision (gpt-4o-mini) = faster cloud.")
+    rerank = st.toggle("Enable rerank", value=False,
+                       help="The chosen model looks at each candidate image and "
+                            "blends its 0-10 relevance judgement with the "
+                            "embedding score. Higher precision, but slower.")
+
+
+def _active_vlm():
+    """The vision model the user selected — used for image-query reading AND
+    reranking, so picking a model actually switches what runs."""
+    if model_choice.startswith("OpenAI") and rag.OPENAI_API_KEY:
+        return rag.OpenAICompatVLM("openai", rag.OPENAI_API_KEY, "gpt-4o-mini"), \
+            "OpenAI vision"
+    return get_vlm(), "Qwen-VL"
 
 query, query_img = None, None
 with c1:
@@ -258,9 +282,13 @@ go = st.button("🔍  Search", type="primary", use_container_width=True)
 # Results — side-by-side comparison
 # ---------------------------------------------------------------------------
 if go and (query or query_img):
-    # For an image query: caption ONCE (the slow step), show it clearly, then
-    # both pipelines do fast text search on that caption. ~2x faster than
-    # captioning per-panel, and the explanation is front-and-centre.
+    # The user-selected model drives BOTH image reading and reranking, so
+    # picking a model actually changes what runs.
+    active_vlm, model_label = _active_vlm()
+    multimodal.vlm = active_vlm
+
+    # For an image query: read it ONCE with the chosen model, show it, then both
+    # pipelines do fast text search on that caption.
     search_str = query
     if query_img is not None:
         st.image(query_img, width=200, caption="your image query")
@@ -268,21 +296,38 @@ if go and (query or query_img):
                 suffix=Path(query_img.name).suffix or ".png") as tf:
             tf.write(query_img.getbuffer())
             tmp_path = tf.name
-        with st.spinner("🧠 Qwen-VL is reading your image… (~15 sec on this laptop)"):
-            search_str = get_vlm().caption(tmp_path)
-        # Fallback captions look like "Image: tmpXXXX" — that means the vision
-        # model errored (busy/loading). Surface it honestly instead of
-        # searching with junk text.
+        _eta = "~5 sec" if model_label == "OpenAI vision" else "~15 sec on this laptop"
+        with st.spinner(f"🧠 {model_label} is reading your image… ({_eta})"):
+            search_str = active_vlm.caption(tmp_path)
+        # A fallback caption ("Image: tmpXXXX") means the model errored — surface
+        # it honestly instead of searching with junk text.
         if search_str.startswith("Image:") or len(search_str) < 20:
-            st.error("😵 **Qwen-VL couldn't read the image just now** — the "
-                     "vision model was probably busy loading. Wait ~10 seconds "
-                     "and press **Search** again.")
+            st.error(f"😵 **{model_label} couldn't read the image just now** — "
+                     "wait a few seconds and press **Search** again.")
             st.stop()
-        st.success(f"🧠 **Qwen-VL read your image as:** {search_str}")
+        st.success(f"🧠 **{model_label} read your image as:** {search_str}")
+
+    # ---- ANSWER (RAG generation): read the top docs and answer, up top ----
+    with st.spinner("💡 Reading the top matches to answer your question…"):
+        _ahits = multimodal.search_text(search_str, k=3).hits
+        _answer = rag.generate_answer(search_str, _ahits)
+    if _answer and _ahits:
+        _src = _ahits[0]
+        st.markdown(
+            f'<div class="answer"><div class="answer-h">💡 Answer</div>'
+            f'<div class="answer-b">{_answer}</div>'
+            f'<div class="answer-src">grounded in: <b>{_src.doc_title}</b> · '
+            f'{_src.doc_file} · page {_src.page}</div></div>',
+            unsafe_allow_html=True)
 
     # Measured separator on this corpus: junk queries ("hii man") top out at
     # ~0.21 cosine; the weakest CORRECT answer scores ~0.42. 0.30 splits them.
     WEAK = 0.30
+    if rerank:
+        st.caption(f"🔁 Reranking with **{model_label}**")
+
+    st.markdown('<div class="sources-label">Retrieved documents '
+                '(multimodal vs. text-only baseline)</div>', unsafe_allow_html=True)
     left, right = st.columns(2)
     for label, pipe, is_mm, col in [("🟣 Multimodal", multimodal, True, left),
                                     ("⚪ Text-only baseline", baseline, False, right)]:

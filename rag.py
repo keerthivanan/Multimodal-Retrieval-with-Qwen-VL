@@ -616,6 +616,43 @@ class Pipeline:
                             query_caption=caption, doc_ranking=ranking)
 
 
+def generate_answer(query: str, hits: list[SearchHit], max_ctx: int = 3) -> str | None:
+    """RAG 'generation' step: write a short answer to the query GROUNDED ONLY in
+    the retrieved documents (no outside knowledge, no hallucination). Returns
+    None if no LLM is available (UI then just shows the retrieved cards)."""
+    ctx = "\n\n".join(f"[{h.doc_title}] {h.text}" for h in hits[:max_ctx] if h.text.strip())
+    if not ctx.strip():
+        return None
+    system = ("You answer the user's question in 1-2 short sentences using ONLY "
+              "the document excerpts provided. If the excerpts do not contain the "
+              "answer, say 'The documents don't clearly answer that.' Never invent "
+              "facts beyond the excerpts.")
+    user = f"Question: {query}\n\nDocument excerpts:\n{ctx}"
+    # Prefer OpenAI (fast, present via the same key); fall back to local Ollama.
+    if OPENAI_API_KEY:
+        try:
+            from openai import OpenAI
+
+            client = OpenAI(api_key=OPENAI_API_KEY, timeout=30.0, max_retries=3)
+            resp = client.chat.completions.create(
+                model="gpt-4o-mini", temperature=0.1,
+                messages=[{"role": "system", "content": system},
+                          {"role": "user", "content": user}])
+            return (resp.choices[0].message.content or "").strip() or None
+        except Exception:  # noqa: BLE001
+            pass
+    if _ollama_up(OLLAMA_HOST):
+        try:
+            from langchain_ollama import ChatOllama
+
+            out = ChatOllama(model=OLLAMA_MODEL, base_url=OLLAMA_HOST,
+                             temperature=0.1).invoke(f"{system}\n\n{user}")
+            return (out.content or "").strip() or None
+        except Exception:  # noqa: BLE001
+            pass
+    return None
+
+
 def _prebuilt_dirs(embeddings) -> tuple[Path, Path]:
     tag = type(embeddings).__name__  # index is embedder-specific
     return (INDEX_DIR / f"faiss_{tag}_mm", INDEX_DIR / f"faiss_{tag}_bl")
